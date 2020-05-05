@@ -1,0 +1,26 @@
+env:
+  node: true
+extends:
+  - "eslint:recommended"
+  - "plugin:@typescript-eslint/eslint-recommended"
+  - "plugin:@typescript-eslint/recommended"
+  - "prettier/@typescript-eslint"
+  - plugin:import/errors
+  - plugin:import/warnings
+  - plugin:import/typescript
+overrides:
+  - files:
+      - "**/*.md"
+    plugins:
+      - "markdown"
+    processor: "markdown/markdown"
+  - files:
+      - "**/*.yaml"
+      - "**/*.yml"
+      - ".lintstagedrc"
+    plugins:
+      - "yaml"
+parser: "@typescript-eslint/parser"
+rules:
+  import/no-cycle: 2
+  no-process-env: 2

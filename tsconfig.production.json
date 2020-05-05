@@ -1,0 +1,6 @@
+// Development config
+{
+	"extends": "./tsconfig.common.json",
+	"compilerOptions": {
+	}
+}

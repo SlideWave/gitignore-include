@@ -1,0 +1,12 @@
+# See https://prettier.io/docs/en/options.html
+useTabs: true
+overrides:
+  - files:
+      - ".prettierrc"
+      - ".lintstagedrc"
+    options:
+      parser: "yaml"
+  - files:
+      - ".sequelizerc"
+    options:
+      parser: "babel"
