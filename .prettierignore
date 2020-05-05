@@ -125,7 +125,8 @@ dist
 .LSOverride
 
 # Icon must end with two \r
-Icon
+Icon
+
 
 # Thumbnails
 ._*
@@ -236,7 +237,12 @@ fabric.properties
 
 ## </include>
 
+# IDE data that should just be ignored
+.idea/
+
+# Production
 .build/
+.env.*
 
 # Config files that Prettier just can't handle.
 .editorconfig
