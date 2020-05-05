@@ -1,5 +1,5 @@
 {
-	"name": "@SlideWave/gitignore-include",
+	"name": "@slidewave/gitignore-include",
 	"version": "0.0.0-dev",
 	"description": "Processes include directives placed in gitignore and compatible files",
 	"main": ".build/index.js",

@@ -43,7 +43,7 @@ jobs:
       - name: Get the publish registry
         # Remove this whenandif merge-release can read direcly from the package.json
         run: |
-          echo "::set-env name=NPM_REGISTRY_URL::$(grep '"registry":' package.json | cut -d':' -f3- | sed -E 's/\s*\/\/([^"]+)\/"/\1/')"
+          echo "::set-env name=NPM_REGISTRY_URL::$(node -p "require('./package.json').publishConfig.registry")"
 
       - name: Publish
         uses: mikeal/merge-release@14c90d7780f48402b0797da25ee5644f85f50302 # Change to v4 or newer once he gets the build fixed.
