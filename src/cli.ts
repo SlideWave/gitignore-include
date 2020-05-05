@@ -3,9 +3,9 @@
 import optimist from "optimist";
 import * as Path from "path";
 
-import { config } from "./lib/config";
 import { ErrorHandling } from "./lib/transforms";
 
+import { config } from "./config";
 import { cleanFiles, transformFiles, TransformFilesOptions } from "./index";
 
 const argv = optimist

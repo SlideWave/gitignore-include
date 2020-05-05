@@ -1,7 +1,6 @@
 import * as Path from "path";
 
-import { config } from "../lib/config";
-
+import { config } from "../config";
 import { transformFiles } from "../index";
 
 if (config.isProduction) {

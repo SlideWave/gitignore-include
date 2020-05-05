@@ -51,6 +51,7 @@
 		"optimist": "^0.6.1"
 	},
 	"devDependencies": {
+		"@schemastore/package": "0.0.5",
 		"@types/chai": "^4.2.11",
 		"@types/chai-as-promised": "^7.1.2",
 		"@types/follow-redirects": "^1.8.0",
