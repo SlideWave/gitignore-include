@@ -28,7 +28,7 @@ Please note that recursive definitions are not yet supported: aka a file includi
 
 Firstly [authenticate NPM with GitHub](https://help.github.com/en/packages/using-github-packages-with-your-projects-ecosystem/configuring-npm-for-use-with-github-packages#authenticating-to-github-packages).
 
-Add the repository to your `.npmrc`:
+Add the repository to your `~/.npmrc`:
 
 ```npmrc
 registry=https://npm.pkg.github.com/SlideWave
@@ -37,7 +37,7 @@ registry=https://npm.pkg.github.com/SlideWave
 Install as a development dependency:
 
 ```sh
-npm install --save-dev @SlideWave/gitignore-include
+npm install --save-dev @slidewave/gitignore-include
 ```
 
 Set up your trigger(s). There are several ways to go about this, including programmatic access. See the [Triggers section](#triggers) for more details.
@@ -56,8 +56,7 @@ Also be sure to update any GitHub Actions workflow jobs that use `setup-node` or
 ```yaml
       - uses: actions/setup-node@v1
         with:
-          registry-url: https://npm.pkg.github.com/
-          scope: '@slidewave'
+          registry-url: https://npm.pkg.github.com/SlideWave
 
       - name: Fetch dependencies
         # Skip post-install scripts here, as a malicious script could steal NODE_AUTH_TOKEN.
@@ -65,9 +64,11 @@ Also be sure to update any GitHub Actions workflow jobs that use `setup-node` or
           npm ci --ignore-scripts
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GPR_READ_TOKEN }}
+          NODE_ENV: ci # Override so that we get the dev dependencies.
 
-      # `npm rebuild` will run all those post-install scripts for us.
-      - run: npm rebuild && npm run prepare --if-present
+      - name: Build dependencies
+        # `npm rebuild` will run all those post-install scripts for us.
+        run: npm rebuild && npm run prepare --if-present
 ```
 
 And add a new secret named `GPR_READ_TOKEN` to your repository. The value of the secret should be a [Personal Access Token](https://github.com/settings/tokens/new) created with the `read:packages` permission.
