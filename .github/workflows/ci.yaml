@@ -1,0 +1,90 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - "*"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-node@v1
+        with:
+          node-version: "14.x"
+
+      - uses: actions/cache@v1 # safe for macOS and Ubuntu runners.
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Fetch dependencies
+        run: |
+          npm ci
+        env:
+          NODE_ENV: ci # Because we need the devDependencies in order to lint.
+
+      - name: Validate files
+        run: |
+          npm run lint
+
+  test:
+    runs-on: ubuntu-latest
+    if: ${{ 'skip' == 'until tests are working' }}
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-node@v1
+        with:
+          node-version: "14.x"
+
+      - uses: actions/cache@v1 # safe for macOS and Ubuntu runners.
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Fetch dependencies
+        run: |
+          npm ci
+        env:
+          NODE_ENV: ci # Because we need the devDependencies in order to test.
+
+      - name: Run tests
+        run: |
+          npm test
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-node@v1
+        with:
+          node-version: "14.x"
+
+      - uses: actions/cache@v1 # safe for macOS and Ubuntu runners.
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Fetch dependencies
+        run: |
+          npm ci
+        env:
+          NODE_ENV: ci # Because we need the devDependencies in order to build.
+
+      - name: Build
+        run: |
+          npm run build
+
+      - name: Run post-build tests
+        run: |
+          npm run test-build
