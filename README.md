@@ -42,7 +42,7 @@ npm install --save-dev @SlideWave/gitignore-include
 
 Set up your trigger(s). There are several ways to go about this, including programmatic access. See the [Triggers section](#triggers) for more details.
 
-Lastly add `include` directives to your `.gitignore` file. These follow the following, admittedly rigid, format:
+Add `include` directives to your `.gitignore` file. These follow the following, admittedly rigid, format:
 
 ```gitignore
 ## <include href="https://github.com/github/gitignore/raw/master/Node.gitignore">
@@ -50,6 +50,27 @@ Lastly add `include` directives to your `.gitignore` file. These follow the foll
 ```
 
 See the [Examples section](#examples) for more details.
+
+Also be sure to update any GitHub Actions workflow jobs that use `setup-node` or any form of `npm install`:
+
+```yaml
+      - uses: actions/setup-node@v1
+        with:
+          registry-url: https://npm.pkg.github.com/
+          scope: '@slidewave'
+
+      - name: Fetch dependencies
+        # Skip post-install scripts here, as a malicious script could steal NODE_AUTH_TOKEN.
+        run: |
+          npm ci --ignore-scripts
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GPR_READ_TOKEN }}
+
+      # `npm rebuild` will run all those post-install scripts for us.
+      - run: npm rebuild && npm run prepare --if-present
+```
+
+And add a new secret named `GPR_READ_TOKEN` to your repository. The value of the secret should be a [Personal Access Token](https://github.com/settings/tokens/new) created with the `read:packages` permission.
 
 ## Triggers
 
