@@ -48,7 +48,7 @@ if (argv._.length <= 0) {
 
 	if (basename === "giismudge") {
 		await transformFiles(opts);
-	} else if (basename === "giismudge") {
+	} else if (basename === "giiclean") {
 		await cleanFiles(opts);
 	} else {
 		throw new Error("Unknown command name!");
