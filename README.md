@@ -26,13 +26,15 @@ Please note that recursive definitions are not yet supported: aka a file includi
 
 ## Installation
 
-Firstly [authenticate NPM with GitHub](https://help.github.com/en/packages/using-github-packages-with-your-projects-ecosystem/configuring-npm-for-use-with-github-packages#authenticating-to-github-packages).
+Firstly [authenticate NPM with GitHub](https://help.github.com/en/packages/using-github-packages-with-your-projects-ecosystem/configuring-npm-for-use-with-github-packages#authenticating-to-github-packages). When you create the Personal Access Token be sure to grant the `repo` and `read:packages` scopes.
 
 Add the repository to your `~/.npmrc`:
 
 ```npmrc
 registry=https://npm.pkg.github.com/SlideWave
 ```
+
+The above two steps have to be done by anyone who pulls from a repository that uses this project.
 
 Install as a development dependency:
 
