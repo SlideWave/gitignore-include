@@ -8,12 +8,19 @@ extends:
   - plugin:import/errors
   - plugin:import/warnings
   - plugin:import/typescript
+  - plugin:json/recommended
 overrides:
   - files:
       - "**/*.md"
     plugins:
       - "markdown"
     processor: "markdown/markdown"
+  - files:
+      - "**/tsconfig.*"
+    rules:
+      json/*:
+        - error
+        - allowComments: true
   - files:
       - "**/*.yaml"
       - "**/*.yml"
