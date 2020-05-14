@@ -46,7 +46,7 @@ jobs:
           echo "::set-env name=NPM_REGISTRY_URL::$(node -p "require('./package.json').publishConfig.registry")"
 
       - name: Publish
-        uses: mikeal/merge-release@14c90d7780f48402b0797da25ee5644f85f50302 # Change to v4 or newer once he gets the build fixed.
+        uses: mikeal/merge-release@4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
