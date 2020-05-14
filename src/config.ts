@@ -21,7 +21,7 @@ class Config {
 
 		try {
 			const packageJson = JSON.parse(
-				readFileSync(Path.resolve("..", "package.json"), {
+				readFileSync(Path.resolve(__dirname, "..", "package.json"), {
 					encoding: "utf8",
 				})
 			);
