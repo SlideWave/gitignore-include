@@ -17,9 +17,9 @@
 		"test-build": "exit 0; npx -q mocha --exit --timeout 60000--file .build/test/beforeAll.js .build/**/*.test.js"
 	},
 	"bin": {
-		"giiclean": ".build/cli.js",
+		"giiclean": ".build/giiclean.js",
 		"giicleanpipe": ".build/cliFilterClean.js",
-		"giismudge": ".build/cli.js",
+		"giismudge": ".build/giismudge.js",
 		"giismudgepipe": ".build/cliFilterSmudge.js"
 	},
 	"repository": {
@@ -46,9 +46,10 @@
 		"node": ">=12"
 	},
 	"dependencies": {
+		"@types/minimist": "^1.2.0",
 		"fast-glob": "^3.2.2",
 		"follow-redirects": "^1.11.0",
-		"optimist": "^0.6.1"
+		"minimist": "^1.2.5"
 	},
 	"devDependencies": {
 		"@schemastore/package": "0.0.5",
@@ -57,7 +58,6 @@
 		"@types/follow-redirects": "^1.8.0",
 		"@types/mocha": "^7.0.2",
 		"@types/node": "^13.13.4",
-		"@types/optimist": "0.0.29",
 		"@typescript-eslint/eslint-plugin": "^2.31.0",
 		"@typescript-eslint/parser": "^2.31.0",
 		"chai": "^4.2.0",
