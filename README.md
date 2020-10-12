@@ -72,3 +72,19 @@ Edit your `package.json` to include the following, assuming you want to run it o
 ```json
 "prepare": "npx -q giismudge .*ignore"
 ```
+
+## Running manually
+
+To update/fix your local files you can run the smudging utility manually via
+
+```sh
+npx giismudge .*ignore
+```
+
+assuming you have either installed locally as recommended above, or globally.
+
+You can remove all auto-inserted ignore values from your files via
+
+```sh
+npx giiclean .*ignore
+```
