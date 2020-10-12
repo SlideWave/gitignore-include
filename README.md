@@ -26,16 +26,6 @@ Please note that recursive definitions are not yet supported: aka a file includi
 
 ## Installation
 
-Firstly [authenticate NPM with GitHub](https://help.github.com/en/packages/using-github-packages-with-your-projects-ecosystem/configuring-npm-for-use-with-github-packages#authenticating-to-github-packages). When you create the Personal Access Token be sure to grant the `repo` and `read:packages` scopes.
-
-Add the repository to your `~/.npmrc`:
-
-```npmrc
-registry=https://npm.pkg.github.com/SlideWave
-```
-
-The above two steps have to be done by anyone who pulls from a repository that uses this project.
-
 Install as a development dependency:
 
 ```sh
@@ -53,13 +43,9 @@ Add `include` directives to your `.gitignore` file. These follow the following, 
 
 See the [Examples section](#examples) for more details.
 
-Also be sure to update any GitHub Actions workflow jobs that use `setup-node` or any form of `npm install`:
+Also be sure to update any GitHub Actions workflow jobs that use any form of `npm install`:
 
 ```yaml
-      - uses: actions/setup-node@v1
-        with:
-          registry-url: https://npm.pkg.github.com/SlideWave
-
       - name: Fetch dependencies
         # Skip post-install scripts here, as a malicious script could steal NODE_AUTH_TOKEN.
         run: |
@@ -72,8 +58,6 @@ Also be sure to update any GitHub Actions workflow jobs that use `setup-node` or
         # `npm rebuild` will run all those post-install scripts for us.
         run: npm rebuild && npm run prepare --if-present
 ```
-
-And add a new secret named `GPR_READ_TOKEN` to your repository. The value of the secret should be a [Personal Access Token](https://github.com/settings/tokens/new) created with the `read:packages` permission.
 
 ## Triggers
 
