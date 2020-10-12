@@ -323,5 +323,6 @@ fabric.properties
 *.sql
 *.txt
 Dockerfile
+LICENSE
 
 # Stuff that probably needs review because someone added it with automatic tooling.
