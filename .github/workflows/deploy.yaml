@@ -3,24 +3,19 @@ name: Deploy
 on:
   push:
     branches:
+      - "main"
       - "master"
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v3
         with:
-          node-version: "12.x"
-
-      - uses: actions/cache@v1 # safe for macOS and Ubuntu runners.
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
+          node-version: "18.x"
+          cache: "npm"
 
       - name: Fetch dependencies
         run: |
@@ -41,12 +36,19 @@ jobs:
           npm run test-build
 
       - name: Get the publish registry
+        id: registry
         # Remove this whenandif merge-release can read direcly from the package.json
         run: |
-          echo "::set-env name=NPM_REGISTRY_URL::$(node -p "require('./package.json').publishConfig.registry")"
+          echo "::set-output name=NPM_URL::$(jq -r '.publishConfig.registry' package.json)"
 
       - name: Publish
         uses: mikeal/merge-release@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_REGISTRY_URL: ${{ steps.registry.outputs.NPM_URL }}
+
+      - name: Push generated git tags
+        # Because merge-release doesn't push the tags: https://github.com/mikeal/merge-release/issues/45
+        run: |
+          git push --tags
