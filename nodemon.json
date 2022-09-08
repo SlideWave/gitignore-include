@@ -1,0 +1,9 @@
+{
+	"events": {
+		"restart": "echo -e \"\\e[3J\" && cls || clear"
+	},
+	"ext": "js,json,md,mjs,sh,ts,tsx,yaml",
+	"ignore": ["**/.build/**"],
+	"verbose": false,
+	"watch": ["*"]
+}

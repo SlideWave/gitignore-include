@@ -10,3 +10,8 @@ overrides:
       - ".sequelizerc"
     options:
       parser: "babel"
+  - files:
+    - "*.md"
+    options:
+      tabWidth: 2
+      useTabs: false

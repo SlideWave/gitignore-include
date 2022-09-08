@@ -1,7 +1,8 @@
 /* eslint-disable no-process-env */
 
-import { readFileSync } from "fs";
-import * as Path from "path";
+import { readFileSync } from "node:fs";
+import * as Path from "node:path";
+
 import { JSONSchemaForNPMPackageJsonFiles } from "@schemastore/package";
 
 interface ConfigOptions {

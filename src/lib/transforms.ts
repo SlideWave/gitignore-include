@@ -1,7 +1,9 @@
-import { https } from "follow-redirects";
 import { Transform, TransformCallback } from "stream";
 
-const includePattern = /(?:##\s+<include\s+href="([^"]+)">.*?##\s+<\/include>\s*)|([^\n]*\n?)/gs;
+import { https } from "follow-redirects";
+
+const includePattern =
+	/(?:##\s+<include\s+href="([^"]+)">.*?##\s+<\/include>\s*)|([^\n]*\n?)/gs;
 
 //* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 export enum ErrorHandling {
@@ -17,7 +19,7 @@ export interface IncludesFilterSmudgeOptions {
 //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 // Utility functions
 //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-const gets = (url: string): Promise<string> =>
+const gets = async (url: string): Promise<string> =>
 	new Promise((resolve, reject) => {
 		https
 			.get(url, (response) => {
@@ -124,8 +126,18 @@ export class IncludesFilterSmudge extends IncludesFilter {
 			} else {
 				this.push(chunk, "utf8");
 			}
-		})().then(() => {
-			callback();
-		});
+		})()
+			.then(() => {
+				callback();
+			})
+			.catch((reason) => {
+				if (reason instanceof Error) {
+					process.stderr.write(reason.stack ?? reason.message);
+				} else {
+					process.stderr.write(
+						typeof reason === "string" ? reason : JSON.stringify(reason)
+					);
+				}
+			});
 	}
 }

@@ -1,12 +1,13 @@
-import { createReadStream, createWriteStream } from "fs";
-import * as FG from "fast-glob";
+import { createReadStream, createWriteStream } from "node:fs";
 import * as Path from "path";
 
+import * as FG from "fast-glob";
+
 import {
-	IncludesFilterSmudge,
-	IncludesFilterSmudgeOptions,
 	IncludesFilter,
 	IncludesFilterClean,
+	IncludesFilterSmudge,
+	IncludesFilterSmudgeOptions,
 } from "./lib/transforms";
 
 //* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -72,9 +73,11 @@ async function transform(
 }
 
 //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-export const cleanFiles = (options: TransformFilesOptions): Promise<void> =>
-	transform(options, IncludesFilterClean);
+export const cleanFiles = async (
+	options: TransformFilesOptions
+): Promise<void> => transform(options, IncludesFilterClean);
 
 //* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-export const transformFiles = (options: TransformFilesOptions): Promise<void> =>
-	transform(options, IncludesFilterSmudge);
+export const transformFiles = async (
+	options: TransformFilesOptions
+): Promise<void> => transform(options, IncludesFilterSmudge);
