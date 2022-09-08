@@ -11,7 +11,7 @@ overrides:
     options:
       parser: "babel"
   - files:
-    - "*.md"
+      - "*.md"
     options:
       tabWidth: 2
       useTabs: false
