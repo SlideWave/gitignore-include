@@ -1,26 +1,18 @@
 name: CI
 
 on:
-  push:
-    branches:
-      - "*"
+  pull_request:
 
 jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v3
         with:
-          node-version: "12.x"
-
-      - uses: actions/cache@v1 # safe for macOS and Ubuntu runners.
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
+          node-version: "18.x"
+          cache: "npm"
 
       - name: Fetch dependencies
         run: |
@@ -32,22 +24,20 @@ jobs:
         run: |
           npm run lint
 
+      - name: Check file formatting
+        run: |
+          npx prettier --check .
+
   test:
     runs-on: ubuntu-latest
     if: ${{ 'skip' == 'until tests are working' }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v3
         with:
-          node-version: "12.x"
-
-      - uses: actions/cache@v1 # safe for macOS and Ubuntu runners.
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
+          node-version: "18.x"
+          cache: "npm"
 
       - name: Fetch dependencies
         run: |
@@ -62,18 +52,12 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v3
         with:
-          node-version: "12.x"
-
-      - uses: actions/cache@v1 # safe for macOS and Ubuntu runners.
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
+          node-version: "18.x"
+          cache: "npm"
 
       - name: Fetch dependencies
         run: |

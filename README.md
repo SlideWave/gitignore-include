@@ -52,8 +52,10 @@ Without a trigger the include directives are not processed. You can accomplish t
 There are multiple ways to configure lint-staged, but one of the most common is via the `package.json` configuration. Thus adding the following to your `package.json` will make sure that every time lint-staged is called, and if you've modified the ignore files, that they are re-smudged correctly:
 
 ```json
-"lint-staged": {
+{
+  "lint-staged": {
     ".*ignore": "giismudge"
+  }
 }
 ```
 
@@ -64,7 +66,11 @@ Prepare works like NPM's postinstall, but only runs on the original project, not
 Edit your `package.json` to include the following, assuming you want to run it on all the files that look like gitignore files:
 
 ```json
-"prepare": "npx -q giismudge .*ignore"
+{
+  "scripts": {
+    "prepare": "npx -q giismudge .*ignore"
+  }
+}
 ```
 
 However since this only happens when you install the packages, it's not recommended.

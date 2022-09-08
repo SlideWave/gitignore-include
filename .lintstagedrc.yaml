@@ -1,0 +1,6 @@
+# See [config](https://github.com/okonet/lint-staged#configuration)
+
+".*ignore": "ts-node --project tsconfig.production.json src/giismudge.ts --"
+"*.{json,md,ts,yaml}":
+  - "eslint"
+  - "prettier --list-different"

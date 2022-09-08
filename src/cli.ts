@@ -1,18 +1,16 @@
 import Minimist from "minimist";
 
+import { config } from "./config";
 import { ErrorHandling } from "./lib/transforms";
 
-import { config } from "./config";
-import { TransformFilesOptions } from "./index";
+import { TransformFilesOptions } from ".";
 
 const argv = Minimist(process.argv.splice(2));
 if (argv._.length <= 0) {
-	console.error("Missing file patterns!");
-	console.error(`[giismudge|giiclean] [errorHandling=embedAsComments|throwImmediate] filePattern...
+	process.stderr.write(`Missing file patterns!
+[giismudge|giiclean] [errorHandling=embedAsComments|throwImmediate] filePattern...
 If invoked as giismudge it will replace the included ignore directives in each file that matches each pattern.  Useful for updating your files!
 If invoked as giiclean it will strip the included ignore directives out of each file that matches each pattern.
-
-If you are looking to process text through a pipe, see giismudgepipe and giicleanpipe.
 
 Options
     errorHandling: Either 'embedAsComments', the default, to cause errors
@@ -31,7 +29,6 @@ export const opts: TransformFilesOptions = {
 			: ErrorHandling.embedAsComments,
 };
 
-console.log(
-	"gitignore-include",
-	config.npmConfig?.version ?? "version unknown!?"
+process.stderr.write(
+	`gitignore-include ${config.npmConfig?.version ?? "version unknown!?"}\n`
 );
