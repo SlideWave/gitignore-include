@@ -72,3 +72,15 @@ jobs:
       - name: Run post-build tests
         run: |
           npm run test-build
+
+  passed:
+    if: ${{ ! ( failure() || cancelled() ) }}
+    needs:
+      - validate
+      - test
+      - build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Passed
+        run: |
+          echo "Just happy that it passed."
