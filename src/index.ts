@@ -1,8 +1,6 @@
-import * as ChildProcess from "child_process";
 import { createReadStream, createWriteStream } from "fs";
 import * as FG from "fast-glob";
 import * as Path from "path";
-import { promisify } from "util";
 
 import {
 	IncludesFilterSmudge,
@@ -10,8 +8,6 @@ import {
 	IncludesFilter,
 	IncludesFilterClean,
 } from "./lib/transforms";
-
-const exec = promisify(ChildProcess.exec);
 
 //* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 export interface TransformFilesOptions extends IncludesFilterSmudgeOptions {
@@ -78,22 +74,6 @@ async function transform(
 //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 export const cleanFiles = (options: TransformFilesOptions): Promise<void> =>
 	transform(options, IncludesFilterClean);
-
-//* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-/**
- * @deprecated Don't use this or the smudge / clean filters: they don't play nicely.  Instead rely only on the NPM postinstall or prepare operations.
- */
-export async function installGitHooks(): Promise<void> {
-	await exec(
-		`git config filter.ignoreProcessor.clean 'npx -q cross-env NODE_NO_WARNINGS=1 npx -q ts-node --project tsconfig.production.json util/ignoreClean.ts'`
-	);
-
-	await exec(
-		`git config filter.ignoreProcessor.smudge 'npx -q cross-env NODE_NO_WARNINGS=1 npx -q ts-node --project tsconfig.production.json util/ignoreSmudge.ts'`
-	);
-
-	await exec(`git config filter.ignoreProcessor.required true`);
-}
 
 //* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 export const transformFiles = (options: TransformFilesOptions): Promise<void> =>

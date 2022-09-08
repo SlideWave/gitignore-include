@@ -18,9 +18,7 @@
 	},
 	"bin": {
 		"giiclean": ".build/giiclean.js",
-		"giicleanpipe": ".build/cliFilterClean.js",
-		"giismudge": ".build/giismudge.js",
-		"giismudgepipe": ".build/cliFilterSmudge.js"
+		"giismudge": ".build/giismudge.js"
 	},
 	"repository": {
 		"type": "git",

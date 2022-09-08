@@ -12,8 +12,6 @@ if (argv._.length <= 0) {
 If invoked as giismudge it will replace the included ignore directives in each file that matches each pattern.  Useful for updating your files!
 If invoked as giiclean it will strip the included ignore directives out of each file that matches each pattern.
 
-If you are looking to process text through a pipe, see giismudgepipe and giicleanpipe.
-
 Options
     errorHandling: Either 'embedAsComments', the default, to cause errors
                    to save into the file or 'throwImmediate' to force the
