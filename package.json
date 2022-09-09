@@ -34,7 +34,7 @@
 		"include"
 	],
 	"author": "Ricky Curtice <kf6kjg@users.noreply.github.com> (http://rwcproductions.com)",
-	"license": "UNLICENSED",
+	"license": "Apache-2.0",
 	"bugs": {
 		"url": "https://github.com/SlideWave/gitignore-include/issues"
 	},
