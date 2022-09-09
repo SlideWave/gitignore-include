@@ -35,20 +35,37 @@ jobs:
         run: |
           npm run test-build
 
+      - name: Clean up the packages
+        env:
+          NODE_ENV: production
+        run: |
+          npm prune
+
+      - name: Install publishing tools
+        run: |
+          npm i -g \
+          semantic-release@19 \
+          ;
+
       - name: Get the publish registry
         id: registry
-        # Remove this whenandif merge-release can read direcly from the package.json
         run: |
-          echo "::set-output name=NPM_URL::$(jq -r '.publishConfig.registry' package.json)"
+          NPM_URL="$(jq -r '.publishConfig.registry' package.json)"
+          echo "NPM_URL=${NPM_URL}"
+          echo "::set-output name=NPM_URL::${NPM_URL}"
+
+          NPM_SCOPE="$(jq -r '.name' package.json | sed -E 's;^(@[^/]+)/.*;\1;')"
+          echo "NPM_SCOPE=${NPM_SCOPE}"
+          echo "::set-output name=NPM_SCOPE::${NPM_SCOPE}"
+
+      - uses: actions/setup-node@v3
+        with:
+          registry-url: ${{ steps.registry.outputs.NPM_URL }}
+          scope: ${{ steps.registry.outputs.NPM_SCOPE }}
 
       - name: Publish
-        uses: mikeal/merge-release@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_REGISTRY_URL: ${{ steps.registry.outputs.NPM_URL }}
-
-      - name: Push generated git tags
-        # Because merge-release doesn't push the tags: https://github.com/mikeal/merge-release/issues/45
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git push --tags
+          npx semantic-release
