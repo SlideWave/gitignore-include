@@ -68,4 +68,5 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          npm pkg delete scripts.prepare # Remove any attempt to execute the Husky install command that doesn't exist at this point.
           npx semantic-release
