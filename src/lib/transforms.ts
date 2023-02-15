@@ -1,9 +1,11 @@
-import { Transform, TransformCallback } from "stream";
+import { readFile } from "node:fs/promises";
+import { Transform, TransformCallback } from "node:stream";
 
 import { https } from "follow-redirects";
 
+//* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 const includePattern =
-	/(?:##\s+<include\s+href="([^"]+)">.*?##\s+<\/include>\s*)|([^\n]*\n?)/gs;
+	/(?:##\s*<include\s+(?<type>[^=]+)="(?<uri>[^"]+)">.*?##\s*<\/include>\s*)|([^\n]*\n?)/gs;
 
 //* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 export enum ErrorHandling {
@@ -17,10 +19,28 @@ export interface IncludesFilterSmudgeOptions {
 }
 
 //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+export class InvalidModuleError extends Error {
+	constructor(message: string) {
+		super(message);
+
+		this.name = InvalidModuleError.name;
+	}
+}
+
+//= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+export class UnknownAttributeError extends Error {
+	constructor(attribute: string) {
+		super(`Unrecognized attribute '${attribute}'`);
+
+		this.name = UnknownAttributeError.name;
+	}
+}
+
+//= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 // Utility functions
 //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-const gets = async (url: string): Promise<string> =>
-	new Promise((resolve, reject) => {
+async function getHref(url: string): Promise<string> {
+	return new Promise((resolve, reject) => {
 		https
 			.get(url, (response) => {
 				let body = "";
@@ -29,6 +49,69 @@ const gets = async (url: string): Promise<string> =>
 			})
 			.on("error", reject);
 	});
+}
+
+//= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+async function transform(
+	chunk: Buffer | string,
+	errorHandling: ErrorHandling,
+	onIncludeData?: (
+		includeType: "file" | "href" | "module",
+		includeUri: string
+	) => Promise<string[] | string> | string[] | string
+): Promise<string> {
+	if (chunk instanceof Buffer) {
+		chunk = chunk.toString("utf8");
+	}
+
+	const matches = chunk.matchAll(includePattern);
+	if (matches) {
+		const result: string[] = [];
+		for (const match of matches) {
+			if (match.groups?.type && match.groups?.uri) {
+				result.push(`## <include ${match.groups.type}="${match.groups.uri}">`);
+				try {
+					if (
+						match.groups.type === "file" ||
+						match.groups.type === "href" ||
+						match.groups.type === "module"
+					) {
+						if (onIncludeData) {
+							const contents = await onIncludeData(
+								match.groups.type,
+								match.groups.uri
+							);
+
+							if (Array.isArray(contents)) {
+								result.push(...contents);
+							} else {
+								result.push(contents);
+							}
+						}
+					} else {
+						throw new UnknownAttributeError(match.groups.type);
+					}
+				} catch (e) {
+					if (errorHandling === ErrorHandling.embedAsComments) {
+						// Add a comment with the error.
+						result.push(
+							`### Error fetching source: ${e}`.replace(/\r\n|\r|\n/g, "\n### ")
+						);
+					} else {
+						throw e;
+					}
+				} finally {
+					result.push(`## </include>\n`);
+				}
+			} else {
+				result.push(match[0].trim());
+			}
+		}
+		return result.join("\n");
+	}
+
+	return chunk;
+}
 
 //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 export class IncludesFilter extends Transform {
@@ -49,31 +132,13 @@ export class IncludesFilterClean extends IncludesFilter {
 		super(options);
 	}
 
-	_transform(
+	async _transform(
 		chunk: Buffer | string,
 		_encoding: string,
 		callback: TransformCallback
-	): void {
-		if (chunk instanceof Buffer) {
-			chunk = chunk.toString("utf8");
-		}
-
-		const matches = chunk.matchAll(includePattern);
-		if (matches) {
-			const result: string[] = [];
-			for (const groups of matches) {
-				if (groups[0].match(/^##\s+<include\s+/)) {
-					result.push(`## <include href="${groups[1]}">`);
-					result.push(`## </include>\n`);
-				} else {
-					result.push(groups[0].trim());
-				}
-			}
-			this.push(result.join("\n"), "utf8"); // Make sure to only push once. This allows us to assume the chunk is the whole stream.
-		} else {
-			this.push(chunk, "utf8");
-		}
-
+	): Promise<void> {
+		// Make sure to only push once. This allows us to assume the chunk is the whole stream.
+		this.push(await transform(chunk, this._errorHandling), "utf8");
 		callback();
 	}
 }
@@ -85,59 +150,48 @@ export class IncludesFilterSmudge extends IncludesFilter {
 		super(options);
 	}
 
-	_transform(
+	async _transform(
 		chunk: Buffer | string,
 		_encoding: string,
 		callback: TransformCallback
-	): void {
-		if (chunk instanceof Buffer) {
-			chunk = chunk.toString("utf8");
-		}
-
-		(async (): Promise<void> => {
-			const matches = chunk.matchAll(includePattern);
-			if (matches) {
-				const result: string[] = [];
-				for (const groups of matches) {
-					if (groups[0].match(/^##\s+<include\s+/)) {
-						try {
-							result.push(`## <include href="${groups[1]}">`);
-							result.push(await gets(groups[1]));
-							result.push(`## </include>\n`);
-						} catch (e) {
-							if (this._errorHandling === ErrorHandling.embedAsComments) {
-								result.push(
-									// Add a comment with the error.
-									`# Error fetching source: ${e}`
-										.replace(/\r\n|\r/g, "\n")
-										.split("\n")
-										.join("\n# ")
-								);
-								result.push(groups[0].trim()); // Make sure that a replace is nearly a no-op other than the error.
-							} else {
-								throw e;
-							}
+	): Promise<void> {
+		try {
+			// Make sure to only push once. This allows us to assume the chunk is the whole stream.
+			this.push(
+				await transform(
+					chunk,
+					this._errorHandling,
+					async (includeType, includeUri) => {
+						if (includeType === "file") {
+							return await readFile(includeUri, "utf8");
 						}
-					} else {
-						result.push(groups[0].trim());
+
+						if (includeType === "href") {
+							return await getHref(includeUri);
+						}
+
+						const imported = await import(includeUri);
+
+						if (typeof imported.default === "string") {
+							return imported.default;
+						} else {
+							throw new InvalidModuleError(
+								"Module is required to default export a string."
+							);
+						}
 					}
-				}
-				this.push(result.join("\n"), "utf8"); // Make sure to only push once. This allows us to assume the chunk is the whole stream.
+				),
+				"utf8"
+			);
+			callback();
+		} catch (reason) {
+			if (reason instanceof Error) {
+				process.stderr.write(reason.stack ?? reason.message);
 			} else {
-				this.push(chunk, "utf8");
+				process.stderr.write(
+					typeof reason === "string" ? reason : JSON.stringify(reason)
+				);
 			}
-		})()
-			.then(() => {
-				callback();
-			})
-			.catch((reason) => {
-				if (reason instanceof Error) {
-					process.stderr.write(reason.stack ?? reason.message);
-				} else {
-					process.stderr.write(
-						typeof reason === "string" ? reason : JSON.stringify(reason)
-					);
-				}
-			});
+		}
 	}
 }

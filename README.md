@@ -15,10 +15,17 @@ Basic format for GitHub's [gitignore project]("https://github.com/github/gitigno
 whatever/else
 ```
 
+A module that default exports a string:
+
+```gitignore
+## <include module="modulename">
+## </include>
+```
+
 A local file:
 
 ```gitignore
-## <include href="file://./other.example">
+## <include file="./other.example">
 ## </include>
 ```
 
