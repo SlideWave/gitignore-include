@@ -29,7 +29,7 @@ A local file:
 ## </include>
 ```
 
-Please note that recursive definitions are not yet supported: aka a file including another file that includes something else. That said PRs to solve this and other issues are welcome!
+Please note that recursive definitions are supported: aka a file including another file that includes something else. This means you can nest ignore files as many layers deep as you wish!
 
 ## Installation
 

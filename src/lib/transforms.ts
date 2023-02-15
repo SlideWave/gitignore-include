@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { Transform, TransformCallback } from "node:stream";
 
@@ -6,6 +7,8 @@ import { https } from "follow-redirects";
 //* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 const includePattern =
 	/(?:##\s*<include\s+(?<type>[^=]+)="(?<uri>[^"]+)">.*?##\s*<\/include>\s*)|([^\n]*\n?)/gs;
+const tagPatternStart = /##\s*<include\s+/gs;
+const tagPatternFinal = /##\s*<\/include>/gs;
 
 //* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 export enum ErrorHandling {
@@ -16,6 +19,24 @@ export enum ErrorHandling {
 //* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 export interface IncludesFilterSmudgeOptions {
 	errorHandling?: ErrorHandling;
+}
+
+//= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+export class DuplicateIncludeError extends Error {
+	constructor() {
+		super("This is a duplicate of a previous include.");
+
+		this.name = DuplicateIncludeError.name;
+	}
+}
+
+//= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+export class InfiniteRecursionError extends Error {
+	constructor() {
+		super("Infinite recursion detected.");
+
+		this.name = InfiniteRecursionError.name;
+	}
 }
 
 //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
@@ -53,18 +74,28 @@ async function getHref(url: string): Promise<string> {
 
 //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 async function transform(
-	chunk: Buffer | string,
+	fileContents: string,
 	errorHandling: ErrorHandling,
 	onIncludeData?: (
 		includeType: "file" | "href" | "module",
 		includeUri: string
-	) => Promise<string[] | string> | string[] | string
+	) => Promise<string[] | string> | string[] | string,
+	includesRecursed: Set<string> = new Set()
 ): Promise<string> {
-	if (chunk instanceof Buffer) {
-		chunk = chunk.toString("utf8");
+	if (onIncludeData) {
+		// Clean out any import contents that already exist so that
+		fileContents = await transform(fileContents, ErrorHandling.throwImmediate);
 	}
 
-	const matches = chunk.matchAll(includePattern);
+	// Break recursive includes.
+	const hashedChuck = createHash("sha256").update(fileContents).digest("hex");
+
+	if (includesRecursed.has(hashedChuck)) {
+		throw new InfiniteRecursionError();
+	}
+	includesRecursed.add(hashedChuck);
+
+	const matches = fileContents.matchAll(includePattern);
 	if (matches) {
 		const result: string[] = [];
 		for (const match of matches) {
@@ -72,23 +103,35 @@ async function transform(
 				result.push(`## <include ${match.groups.type}="${match.groups.uri}">`);
 				try {
 					if (
-						match.groups.type === "file" ||
-						match.groups.type === "href" ||
-						match.groups.type === "module"
+						onIncludeData &&
+						(match.groups.type === "file" ||
+							match.groups.type === "href" ||
+							match.groups.type === "module")
 					) {
-						if (onIncludeData) {
-							const contents = await onIncludeData(
-								match.groups.type,
-								match.groups.uri
-							);
+						const uriMashup = `${match.groups.type}=${match.groups.uri}`;
 
-							if (Array.isArray(contents)) {
-								result.push(...contents);
-							} else {
-								result.push(contents);
-							}
+						if (includesRecursed.has(uriMashup)) {
+							throw new DuplicateIncludeError();
 						}
-					} else {
+						includesRecursed.add(uriMashup);
+
+						const contents = await onIncludeData(
+							match.groups.type,
+							match.groups.uri
+						);
+
+						const transformedContents = await transform(
+							Array.isArray(contents) ? contents.join("\n") : contents,
+							errorHandling,
+							onIncludeData,
+							includesRecursed
+						);
+						result.push(
+							transformedContents
+								.replace(tagPatternStart, "## <embeddedinclude ")
+								.replace(tagPatternFinal, "## </embeddedinclude>")
+						);
+					} else if (onIncludeData) {
 						throw new UnknownAttributeError(match.groups.type);
 					}
 				} catch (e) {
@@ -110,18 +153,21 @@ async function transform(
 		return result.join("\n");
 	}
 
-	return chunk;
+	return fileContents;
 }
 
 //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 export class IncludesFilter extends Transform {
 	protected _errorHandling: ErrorHandling;
+	protected _fileContents: string;
 
 	constructor(options?: IncludesFilterSmudgeOptions) {
 		super();
 
 		this._errorHandling =
 			options?.errorHandling ?? ErrorHandling.embedAsComments;
+
+		this._fileContents = "";
 	}
 }
 
@@ -132,13 +178,25 @@ export class IncludesFilterClean extends IncludesFilter {
 		super(options);
 	}
 
-	async _transform(
+	override _transform(
 		chunk: Buffer | string,
 		_encoding: string,
 		callback: TransformCallback
-	): Promise<void> {
+	): void {
+		if (chunk instanceof Buffer) {
+			chunk = chunk.toString("utf8");
+		}
+
+		this._fileContents += chunk; // HACK: This is NOT how to do stream processing: loading it all into memory is a recipe for memory issues.
+		callback();
+	}
+
+	override async _flush(callback: TransformCallback): Promise<void> {
 		// Make sure to only push once. This allows us to assume the chunk is the whole stream.
-		this.push(await transform(chunk, this._errorHandling), "utf8");
+		this.push(
+			await transform(this._fileContents, ErrorHandling.throwImmediate),
+			"utf8"
+		);
 		callback();
 	}
 }
@@ -150,16 +208,25 @@ export class IncludesFilterSmudge extends IncludesFilter {
 		super(options);
 	}
 
-	async _transform(
+	override _transform(
 		chunk: Buffer | string,
 		_encoding: string,
 		callback: TransformCallback
-	): Promise<void> {
+	): void {
+		if (chunk instanceof Buffer) {
+			chunk = chunk.toString("utf8");
+		}
+
+		this._fileContents += chunk; // HACK: This is NOT how to do stream processing: loading it all into memory is a recipe for memory issues.
+		callback();
+	}
+
+	override async _flush(callback: TransformCallback): Promise<void> {
 		try {
 			// Make sure to only push once. This allows us to assume the chunk is the whole stream.
 			this.push(
 				await transform(
-					chunk,
+					this._fileContents,
 					this._errorHandling,
 					async (includeType, includeUri) => {
 						if (includeType === "file") {
@@ -183,7 +250,6 @@ export class IncludesFilterSmudge extends IncludesFilter {
 				),
 				"utf8"
 			);
-			callback();
 		} catch (reason) {
 			if (reason instanceof Error) {
 				process.stderr.write(reason.stack ?? reason.message);
@@ -192,6 +258,8 @@ export class IncludesFilterSmudge extends IncludesFilter {
 					typeof reason === "string" ? reason : JSON.stringify(reason)
 				);
 			}
+		} finally {
+			callback();
 		}
 	}
 }
