@@ -1,0 +1,15 @@
+Fails when the attribute is invalid
+
+## <include unreal="notexistent">
+## </include>
+
+Does not allow deep infinite recursion
+
+## <include file="clean.ignore">
+## </include>
+
+Successfully includes a module
+
+## <include module="./test.module.ignore.js">
+## </include>
+

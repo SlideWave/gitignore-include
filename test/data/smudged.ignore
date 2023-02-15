@@ -1,0 +1,141 @@
+  Does not trim starting line of file
+
+Does not trim extra newlines between comments
+
+
+
+
+
+Needs test to prove that it doesn't trim end of line
+
+# Just a random comment
+
+Needs test to prove does not remove carriage returns
+
+## Also just a random comment
+
+Fails when the attribute is invalid
+
+## <include unreal="notexistent">
+### Error fetching source: UnknownAttributeError: Unrecognized attribute 'unreal'
+## </include>
+
+
+File tests
+
+  Fails when the file doesn't exist
+
+## <include file="notexistent">
+### Error fetching source: Error: ENOENT: no such file or directory, open 'notexistent'
+## </include>
+
+  Fails when the same failure is repeated
+
+## <include file="notexistent">
+### Error fetching source: DuplicateIncludeError: This is a duplicate of a previous include.
+## </include>
+
+  Fails to include self
+
+## <include file="clean.ignore">
+### Error fetching source: InfiniteRecursionError: Infinite recursion detected.
+## </include>
+
+  Successfully includes a file
+
+## <include file="embed.ignore">
+Fails when the attribute is invalid
+
+## <embeddedinclude unreal="notexistent">
+### Error fetching source: UnknownAttributeError: Unrecognized attribute 'unreal'
+## </embeddedinclude>
+
+Does not allow deep infinite recursion
+
+## <embeddedinclude file="clean.ignore">
+### Error fetching source: DuplicateIncludeError: This is a duplicate of a previous include.
+## </embeddedinclude>
+
+Successfully includes a module
+
+## <embeddedinclude module="./test.module.ignore.js">
+# Hey it's a module!
+## </embeddedinclude>
+
+## </include>
+
+  Successfully includes a in a deeper folder
+
+## <include file="deep/deep.ignore">
+# A file in a different tree.
+
+## <embeddedinclude file="deep2.ignore">
+# Another file in a different tree.
+
+## <embeddedinclude file="deep3.ignore">
+# 3rd file in a different tree.
+
+## <embeddedinclude file="deeper/deep4.ignore">
+# 4th file in a different tree.
+
+## <embeddedinclude file="deep5.ignore">
+# 5th file in a different tree.
+## </embeddedinclude>
+## </embeddedinclude>
+## </embeddedinclude>
+## </embeddedinclude>
+## </include>
+
+
+Module tests
+
+  Fails when the module doesn't exist
+
+## <include module="notexistent">
+### Error fetching source: Error: Cannot find module 'notexistent'
+### Require stack:
+### - /Users/rickycurtice/dev_slidewave/gitignore-include/.build/lib/transforms.js
+### - /Users/rickycurtice/dev_slidewave/gitignore-include/.build/cli.js
+## </include>
+
+  Fails to include a module that was included by a previous nested include - see the file embed.ignore for the first include
+
+## <include module="./test.module.ignore.js">
+### Error fetching source: DuplicateIncludeError: This is a duplicate of a previous include.
+## </include>
+
+
+URL tests
+
+  Fails to include a file URL
+
+## <include href="file://./embed.ignore">
+### Error fetching source: AssertionError [ERR_ASSERTION]: protocol mismatch
+## </include>
+
+  Fails to include an invalid URL
+
+## <include href="https://github.com/github/gitignore/raw/master/Global/VisualStudioCode.gitignore">
+### Error fetching source: WebError: 404 Not Found
+## </include>
+
+  Correctly reads a good URL
+
+## <include href="https://github.com/github/gitignore/raw/main/Global/VisualStudioCode.gitignore">
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/*.code-snippets
+
+# Local History for Visual Studio Code
+.history/
+
+# Built Visual Studio Code Extensions
+*.vsix
+## </include>
+
+### Last random comment
+
+at the end

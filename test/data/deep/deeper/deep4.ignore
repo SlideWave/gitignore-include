@@ -1,0 +1,4 @@
+# 4th file in a different tree.
+
+## <include file="deep5.ignore">
+## </include>
