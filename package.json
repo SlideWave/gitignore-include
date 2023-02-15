@@ -10,9 +10,8 @@
 	"scripts": {
 		"build": "npm run clean && tsc --project tsconfig.production.json",
 		"clean": "npx -q rimraf .build",
-		"lint": "eslint --max-warnings=0 '**'",
-		"postinstall": "patch-package",
-		"prepare": "husky install",
+		"lint": "eslint --max-warnings=0 . && prettier --check --loglevel warn .",
+		"prepare": "patch-package && husky install",
 		"test": "mocha --exit --timeout 60000 --require ts-node/register --file src/test/beforeAll.ts src/**/*.test.ts",
 		"test-build": "exit 0; mocha --exit --timeout 60000--file .build/test/beforeAll.js .build/**/*.test.js"
 	},
@@ -44,35 +43,35 @@
 		"node": ">=14.18"
 	},
 	"dependencies": {
-		"fast-glob": "^3.2.2",
-		"follow-redirects": "^1.11.0",
-		"minimist": "^1.2.5",
-		"patch-package": "^6.4.7"
+		"fast-glob": "^3.2.12",
+		"follow-redirects": "^1.15.2",
+		"minimist": "^1.2.8",
+		"patch-package": "^6.5.1"
 	},
 	"devDependencies": {
 		"@schemastore/package": "^0.0.6",
-		"@types/chai": "^4.3.3",
+		"@types/chai": "^4.3.4",
 		"@types/chai-as-promised": "^7.1.5",
-		"@types/follow-redirects": "^1.8.0",
+		"@types/follow-redirects": "^1.14.1",
 		"@types/minimist": "^1.2.2",
-		"@types/mocha": "^9.1.1",
-		"@types/node": "^18.7.16",
-		"@typescript-eslint/eslint-plugin": "^5.36.2",
-		"@typescript-eslint/parser": "^5.36.2",
-		"chai": "^4.3.6",
+		"@types/mocha": "^10.0.1",
+		"@types/node": "^18.13.0",
+		"@typescript-eslint/eslint-plugin": "^5.52.0",
+		"@typescript-eslint/parser": "^5.52.0",
+		"chai": "^4.3.7",
 		"chai-as-promised": "^7.1.1",
-		"eslint": "^8.23.0",
-		"eslint-config-prettier": "^8.5.0",
-		"eslint-import-resolver-typescript": "^3.5.1",
-		"eslint-plugin-import": "^2.26.0",
+		"eslint": "^8.34.0",
+		"eslint-config-prettier": "^8.6.0",
+		"eslint-import-resolver-typescript": "^3.5.3",
+		"eslint-plugin-import": "^2.27.5",
 		"eslint-plugin-json": "^3.1.0",
 		"eslint-plugin-markdown": "^3.0.0",
 		"eslint-plugin-yaml": "^0.5.0",
-		"husky": "^8.0.1",
-		"lint-staged": "^13.0.3",
-		"mocha": "^10.0.0",
-		"prettier": "^2.7.1",
+		"husky": "^8.0.3",
+		"lint-staged": "^13.1.2",
+		"mocha": "^10.2.0",
+		"prettier": "^2.8.4",
 		"ts-node": "^10.9.1",
-		"typescript": "^4.8.3"
+		"typescript": "^4.9.5"
 	}
 }
