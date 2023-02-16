@@ -129,7 +129,6 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
-
 ## </include>
 
 ## <include href="https://github.com/github/gitignore/raw/main/Global/macOS.gitignore">
@@ -159,7 +158,6 @@ Icon
 Network Trash Folder
 Temporary Items
 .apdisk
-
 ## </include>
 
 ## <include href="https://github.com/github/gitignore/raw/main/Global/JetBrains.gitignore">
@@ -240,7 +238,6 @@ fabric.properties
 
 # Android studio 3.1+ serialized cache file
 .idea/caches/build_file_checksums.ser
-
 ## </include>
 
 ## <include href="https://github.com/github/gitignore/raw/main/Global/VisualStudioCode.gitignore">
@@ -256,7 +253,6 @@ fabric.properties
 
 # Built Visual Studio Code Extensions
 *.vsix
-
 ## </include>
 
 # IDE data that should just be ignored

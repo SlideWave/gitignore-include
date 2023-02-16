@@ -6,7 +6,7 @@ import { https } from "follow-redirects";
 
 //* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 const includePattern =
-	/(?:##\s*<include\s+(?<type>[^=]+)="(?<uri>[^"]+)">.*?##\s*<\/include>\s*)|([^\n]*\n?)/gs;
+	/(?:##\s*<include\s+(?<type>[^=]+)="(?<uri>[^"]+)">[\s\S]*?##\s*<\/include>[^\S\n]*)|(?:[^\n]+\n?)+|\n/g;
 const tagPatternStart = /##\s*<include\s+/gs;
 const tagPatternFinal = /##\s*<\/include>/gs;
 
@@ -99,8 +99,10 @@ async function transform(
 	if (matches) {
 		const result: string[] = [];
 		for (const match of matches) {
-			if (match.groups?.type && match.groups?.uri) {
-				result.push(`## <include ${match.groups.type}="${match.groups.uri}">`);
+			if (match.groups?.type && match.groups.uri) {
+				result.push(
+					`## <include ${match.groups.type}="${match.groups.uri}">\n`
+				);
 				try {
 					if (
 						onIncludeData &&
@@ -130,6 +132,7 @@ async function transform(
 							transformedContents
 								.replace(tagPatternStart, "## <embeddedinclude ")
 								.replace(tagPatternFinal, "## </embeddedinclude>")
+								.replace(/\n$/, "") + "\n"
 						);
 					} else if (onIncludeData) {
 						throw new UnknownAttributeError(match.groups.type);
@@ -138,19 +141,22 @@ async function transform(
 					if (errorHandling === ErrorHandling.embedAsComments) {
 						// Add a comment with the error.
 						result.push(
-							`### Error fetching source: ${e}`.replace(/\r\n|\r|\n/g, "\n### ")
+							`### Error fetching source: ${String(e).replace(
+								/\r\n|\r|\n/g,
+								"\n### "
+							)}\n`
 						);
 					} else {
 						throw e;
 					}
 				} finally {
-					result.push(`## </include>\n`);
+					result.push(`## </include>`);
 				}
 			} else {
-				result.push(match[0].replace(/\n+$/, ""));
+				result.push(match[0]);
 			}
 		}
-		return result.join("\n");
+		return result.join("");
 	}
 
 	return fileContents;

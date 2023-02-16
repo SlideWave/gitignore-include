@@ -129,7 +129,6 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
-
 ## </include>
 
 ## <include href="https://github.com/github/gitignore/raw/main/Global/macOS.gitignore">
@@ -159,11 +158,9 @@ Icon
 Network Trash Folder
 Temporary Items
 .apdisk
-
 ## </include>
 
-href="https://github.com/github/gitignore/raw/main/
-## <include href="https://raw.githubusercontent.com/github/gitignore/master/Global/JetBrains.gitignore">
+## <include href="https://github.com/github/gitignore/raw/main/Global/JetBrains.gitignore">
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio, WebStorm and Rider
 # Reference: https://intellij-support.jetbrains.com/hc/en-us/articles/206544839
 
@@ -241,11 +238,9 @@ fabric.properties
 
 # Android studio 3.1+ serialized cache file
 .idea/caches/build_file_checksums.ser
-
 ## </include>
 
-href="https://github.com/github/gitignore/raw/main/
-## <include href="https://raw.githubusercontent.com/github/gitignore/master/Global/VisualStudioCode.gitignore">
+## <include href="https://github.com/github/gitignore/raw/main/Global/VisualStudioCode.gitignore">
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
@@ -258,7 +253,6 @@ href="https://github.com/github/gitignore/raw/main/
 
 # Built Visual Studio Code Extensions
 *.vsix
-
 ## </include>
 
 # IDE data that should just be ignored
