@@ -147,7 +147,7 @@ async function transform(
 					result.push(`## </include>\n`);
 				}
 			} else {
-				result.push(match[0].trim());
+				result.push(match[0].replace(/\n+$/, ""));
 			}
 		}
 		return result.join("\n");
