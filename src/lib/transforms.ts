@@ -58,6 +58,15 @@ export class UnknownAttributeError extends Error {
 }
 
 //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+export class WebError extends Error {
+	constructor(code: number, meaning: string) {
+		super(`${code} ${meaning}`);
+
+		this.name = WebError.name;
+	}
+}
+
+//= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 // Utility functions
 //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 async function getHref(url: string): Promise<string> {
@@ -66,7 +75,18 @@ async function getHref(url: string): Promise<string> {
 			.get(url, (response) => {
 				let body = "";
 				response.on("data", (chunk) => (body += chunk));
-				response.on("end", () => resolve(body));
+				response.on("end", () => {
+					if (
+						response.statusCode !== undefined &&
+						Math.floor(response.statusCode / 100) !== 2
+					) {
+						return reject(
+							new WebError(response.statusCode, response.statusMessage ?? "")
+						);
+					}
+
+					resolve(body);
+				});
 			})
 			.on("error", reject);
 	});
