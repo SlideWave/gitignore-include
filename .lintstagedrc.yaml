@@ -1,6 +1,6 @@
 # See [config](https://github.com/okonet/lint-staged#configuration)
 
-".*ignore": "npx giiclean --"
+".*ignore": "npx giismudge --"
 "*.{json,md,ts,yaml}":
   - "eslint"
   - "prettier --list-different"
