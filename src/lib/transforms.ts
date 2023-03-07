@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
+import Path from "node:path";
 import { Transform, TransformCallback } from "node:stream";
 
 import { https } from "follow-redirects";
@@ -20,6 +21,9 @@ export enum ErrorHandling {
 export interface IncludesFilterSmudgeOptions {
 	errorHandling?: ErrorHandling;
 }
+
+//* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+export type UriType = "file" | "href" | "module";
 
 //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 export class DuplicateIncludeError extends Error {
@@ -97,10 +101,11 @@ async function transform(
 	fileContents: string,
 	errorHandling: ErrorHandling,
 	onIncludeData?: (
-		includeType: "file" | "href" | "module",
+		includeType: UriType,
 		includeUri: string
 	) => Promise<string[] | string> | string[] | string,
-	includesRecursed: Set<string> = new Set()
+	includesRecursed: Set<string> = new Set(),
+	relativeTo: { type: UriType; uri: string } | undefined = undefined
 ): Promise<string> {
 	if (onIncludeData) {
 		// Clean out any import contents that already exist so that
@@ -137,16 +142,53 @@ async function transform(
 						}
 						includesRecursed.add(uriMashup);
 
-						const contents = await onIncludeData(
-							match.groups.type,
-							match.groups.uri
-						);
+						// from  to    target result
+						// none  file  file   Path.dirname(match.groups.uri) & match.groups.uri
+						// none  href  href   Path.dirname(match.groups.uri) & match.groups.uri
+						// none  mod   mod    Path.dirname(match.groups.uri) & match.groups.uri
+						//
+						// file  file  file   Path.dirname(relativeTo.uri + match.groups.uri) & Path.join(relativeTo.uri, match.groups.uri)
+						// file  href  href   Path.dirname(relativeTo.uri + match.groups.uri) & match.groups.uri
+						// file  mod   mod    Path.dirname(relativeTo.uri + match.groups.uri) & match.groups.uri
+						//
+						// href  file  href   Path.dirname(relativeTo.uri + match.groups.uri) & new URL(match.groups.uri, relativeTo.uri).href
+						// href  href  href   Path.dirname(relativeTo.uri + match.groups.uri) & match.groups.uri
+						// href  mod   mod    Path.dirname(relativeTo.uri + match.groups.uri) & match.groups.uri
+						//
+						// mod   file  mod    Unable to determine: a module of `@org/module`, `@org/module/path`, `module`, `module/path`, and './local/path/module.js' are valid, thus making the correct dirname difficult to determine.
+						// mod   href  href   Path.dirname(relativeTo.uri + match.groups.uri) & match.groups.uri
+						// mod   mod   mod    Path.dirname(relativeTo.uri + match.groups.uri) & match.groups.uri
+
+						if (
+							relativeTo &&
+							relativeTo.type === "module" &&
+							match.groups.type === "file"
+						) {
+							throw new InvalidModuleError(
+								"Modules cannot include file URIs at this time. PRs are welcome."
+							);
+						}
+
+						const path =
+							match.groups.type === "href" || match.groups.type === "module"
+								? match.groups.uri
+								: relativeTo && relativeTo.type === "href"
+								? // Called as an href is pulling a file ref, thus stays an href and is relative to the folder of the given path.
+								  new URL(match.groups.uri, relativeTo.uri).href
+								: // Called as a file is pulling a file ref, thus stays the original type and is relative to the folder of the given path.
+								  Path.join(relativeTo?.uri ?? "", match.groups.uri);
+
+						const contents = await onIncludeData(match.groups.type, path);
 
 						const transformedContents = await transform(
 							Array.isArray(contents) ? contents.join("\n") : contents,
 							errorHandling,
 							onIncludeData,
-							includesRecursed
+							includesRecursed,
+							{
+								type: relativeTo?.type ?? match.groups.type,
+								uri: Path.dirname(path),
+							}
 						);
 						result.push(
 							transformedContents
