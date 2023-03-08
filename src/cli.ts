@@ -59,27 +59,36 @@ Options
 	process.exit(1);
 }
 
-if (opts.files.includes("-")) {
-	// Pipe filter mode.
-	const transformer =
-		Path.basename(process.argv[1]) === "giismudge"
-			? new IncludesFilterSmudge(opts)
-			: new IncludesFilterClean(opts);
+(async (): Promise<void> => {
+	if (opts.files.includes("-")) {
+		// Pipe filter mode.
+		const filter =
+			Path.basename(process.argv[1]) === "giismudge"
+				? new IncludesFilterSmudge(opts)
+				: new IncludesFilterClean(opts);
 
-	transformer.pipe(process.stdout);
+		await new Promise<void>((resolve, reject) => {
+			filter.on("end", () => {
+				resolve();
+			});
 
-	try {
-		process.stdin.pipe(transformer);
-	} finally {
-		process.stdin.resume();
-	}
-} else {
-	// File processor mode.
-	process.stderr.write(
-		`gitignore-include ${config.npmConfig?.version ?? "version unknown!?"}\n`
-	);
+			filter.on("error", (error) => {
+				reject(error);
+			});
 
-	(async (): Promise<void> => {
+			filter.pipe(process.stdout);
+			try {
+				process.stdin.pipe(filter);
+			} finally {
+				process.stdin.resume();
+			}
+		});
+	} else {
+		// File processor mode.
+		process.stderr.write(
+			`gitignore-include ${config.npmConfig?.version ?? "version unknown!?"}\n`
+		);
+
 		for await (let file of FG.stream(opts.files, {
 			cwd: opts.cwd,
 			dot: true,
@@ -101,7 +110,9 @@ if (opts.files.includes("-")) {
 						: new IncludesFilterClean(opts);
 
 				filter.on("data", (data) => {
-					result.push(data.toString());
+					if (typeof data === "string") {
+						result.push(data);
+					}
 				});
 
 				filter.on("end", () => {
@@ -125,14 +136,18 @@ if (opts.files.includes("-")) {
 				fileSink.end();
 			}
 		}
-	})().catch((reason) => {
-		if (reason instanceof Error) {
-			process.stderr.write(reason.stack ?? reason.message);
-		} else {
-			process.stderr.write(
-				typeof reason === "string" ? reason : JSON.stringify(reason)
-			);
-		}
-		process.exit(1);
-	});
-}
+	}
+})().catch((error) => {
+	if (error instanceof Error) {
+		process.stderr.write(`${error.stack ?? error.message}\n`);
+	} else {
+		process.stderr.write(
+			`${
+				typeof error === "object"
+					? JSON.stringify(error, null, "  ")
+					: String(error)
+			}\n`
+		);
+	}
+	process.exit(1);
+});

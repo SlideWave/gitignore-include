@@ -318,16 +318,20 @@ export class IncludesFilterSmudge extends IncludesFilter {
 				),
 				"utf8"
 			);
-		} catch (reason) {
-			if (reason instanceof Error) {
-				process.stderr.write(reason.stack ?? reason.message);
-			} else {
-				process.stderr.write(
-					typeof reason === "string" ? reason : JSON.stringify(reason)
-				);
-			}
-		} finally {
-			callback();
+		} catch (error) {
+			callback(
+				error instanceof Error
+					? error
+					: new Error(
+							typeof error === "object"
+								? JSON.stringify(error, null, "  ")
+								: String(error)
+					  )
+			);
+			callback = (): void => {
+				// Prevents a double call of the callback.
+			};
 		}
+		callback(); // Has to be outside of the try so that the catch handler doesnt' have to worry about it.
 	}
 }
