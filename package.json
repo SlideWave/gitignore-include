@@ -47,7 +47,7 @@
 		"fast-glob": "^3.2.12",
 		"follow-redirects": "^1.15.2",
 		"minimist": "^1.2.8",
-		"patch-package": "^6.5.1"
+		"patch-package": "^6.4.7"
 	},
 	"devDependencies": {
 		"@schemastore/package": "^0.0.6",
