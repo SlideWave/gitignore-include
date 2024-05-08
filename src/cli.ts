@@ -60,13 +60,13 @@ Options
 }
 
 (async (): Promise<void> => {
+	const filter =
+		Path.basename(process.argv[1]) === "giismudge"
+			? new IncludesFilterSmudge(opts)
+			: new IncludesFilterClean(opts);
+
 	if (opts.files.includes("-")) {
 		// Pipe filter mode.
-		const filter =
-			Path.basename(process.argv[1]) === "giismudge"
-				? new IncludesFilterSmudge(opts)
-				: new IncludesFilterClean(opts);
-
 		await new Promise<void>((resolve, reject) => {
 			filter.on("end", () => {
 				resolve();
@@ -101,35 +101,34 @@ Options
 
 			const fileSource = createReadStream(filePath, { encoding: "utf8" });
 
-			const filterResults = await new Promise<string[]>((resolve, reject) => {
-				const result: string[] = [];
+			const filterResults = await new Promise<(string | Buffer)[]>(
+				(resolve, reject) => {
+					// Load the filtered results into memory so that we don't destroy the source file if something fails.
+					const result: (string | Buffer)[] = [];
 
-				const filter =
-					Path.basename(process.argv[1]) === "giismudge"
-						? new IncludesFilterSmudge(opts)
-						: new IncludesFilterClean(opts);
+					filter.on("data", (data) => {
+						if (typeof data === "string" || Buffer.isBuffer(data)) {
+							result.push(data);
+						}
+					});
 
-				filter.on("data", (data) => {
-					if (typeof data === "string") {
-						result.push(data);
-					}
-				});
+					filter.on("end", () => {
+						resolve(result);
+					});
 
-				filter.on("end", () => {
-					resolve(result);
-				});
+					filter.on("error", (error) => {
+						reject(error);
+					});
 
-				filter.on("error", (error) => {
-					reject(error);
-				});
+					fileSource.on("end", () => {
+						filter.end();
+					});
 
-				fileSource.on("end", () => {
-					filter.end();
-				});
+					fileSource.pipe(filter);
+				}
+			);
 
-				fileSource.pipe(filter);
-			});
-
+			// Only write back to the file if we have something to write.
 			if (filterResults.length) {
 				const fileSink = createWriteStream(filePath, { encoding: "utf8" });
 				fileSink.write(filterResults.join(""));
