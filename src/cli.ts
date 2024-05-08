@@ -101,8 +101,6 @@ Options
 
 			const fileSource = createReadStream(filePath, { encoding: "utf8" });
 
-			process.stderr.write(`RWCDEBUG: ${JSON.stringify({ file, filePath })}\n`);
-
 			const filter =
 				Path.basename(process.argv[1]) === "giismudge"
 					? new IncludesFilterSmudge(opts)
