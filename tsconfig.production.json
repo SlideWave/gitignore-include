@@ -2,5 +2,13 @@
 {
 	"extends": "./tsconfig.common.json",
 	"compilerOptions": {
-	}
+		"noEmit": false,
+		"rootDir": "src"
+	},
+	"include": [
+		"src"
+	],
+	"exclude": [
+		"**/*.test.ts"
+	]
 }

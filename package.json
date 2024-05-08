@@ -12,8 +12,9 @@
 		"clean": "npx -q rimraf .build",
 		"lint": "eslint --max-warnings=0 . && prettier --check --loglevel warn .",
 		"prepare": "husky install",
-		"test": "mocha --exit --timeout 60000 --require ts-node/register --file src/test/beforeAll.ts src/**/*.test.ts && ./test/test.sh",
-		"test-build": "exit 0; mocha --exit --timeout 60000--file .build/test/beforeAll.js .build/**/*.test.js"
+		"pretest": "npm run build",
+		"test:watch": "npx nodemon --exec npm run test",
+		"test": "mocha --exit --timeout 60000 --require ts-node/register --file test/hooks.ts src/**/*.test.ts"
 	},
 	"bin": {
 		"giiclean": ".build/cli.js",

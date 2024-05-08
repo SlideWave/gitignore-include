@@ -60,13 +60,13 @@ Options
 }
 
 (async (): Promise<void> => {
-	const filter =
-		Path.basename(process.argv[1]) === "giismudge"
-			? new IncludesFilterSmudge(opts)
-			: new IncludesFilterClean(opts);
-
 	if (opts.files.includes("-")) {
 		// Pipe filter mode.
+		const filter =
+			Path.basename(process.argv[1]) === "giismudge"
+				? new IncludesFilterSmudge(opts)
+				: new IncludesFilterClean(opts);
+
 		await new Promise<void>((resolve, reject) => {
 			filter.on("end", () => {
 				resolve();
@@ -100,6 +100,13 @@ Options
 			const filePath = Path.resolve(opts.cwd, file);
 
 			const fileSource = createReadStream(filePath, { encoding: "utf8" });
+
+			process.stderr.write(`RWCDEBUG: ${JSON.stringify({ file, filePath })}\n`);
+
+			const filter =
+				Path.basename(process.argv[1]) === "giismudge"
+					? new IncludesFilterSmudge(opts)
+					: new IncludesFilterClean(opts);
 
 			const filterResults = await new Promise<(string | Buffer)[]>(
 				(resolve, reject) => {
